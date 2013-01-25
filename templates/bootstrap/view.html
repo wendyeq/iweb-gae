@@ -1,0 +1,67 @@
+{{define "main"}}
+{{template "header" .}}
+		{{$article := .article}}
+	    	{{$a := $article.MetaData}}
+	    <div class="container-fluid">
+	    	
+	    	<h1>{{$a.Title |html}}</h1>
+
+	    	<div class="meta">{{$a.PostTime.Format "2006/01/02"}} 标签：
+	    		{{range $tag := $a.Tags}}
+	    		<a href="/blog/tag/{{$tag}}">{{$tag}}</a> 
+	    		{{end}}
+	    	</div>	 
+	    	<div>{{$article.Text}}</div>   	
+			<hr>
+
+	    	<div>
+	    		<legend>Comments</legend>
+	    		{{with $article.Comments}}
+	    		<ul class="media-list">
+					{{$comments := $article.Comments}}
+					{{range $comment := $comments}}
+	    			<li class="media">
+	    				<a class="pull-left" href="#">
+	    					<img class="media-object" src="/themes/bootstrap/img/holder.png">
+	    				</a>
+	    				<div class="media-body">
+	    					<h6 class="media-heading">Written by {{$comment.Author}} on {{$comment.PostTime.Format "2006/01/02"}}</h6>
+	    					{{$comment.Content}}			
+	    				</div>
+	    			</li>
+	    			{{end}}
+	    		</ul>
+	    		{{else}}
+	    		<p>no comment.</p>
+	    		{{end}}
+	    	</div>
+	    	<div >
+	    		<form method="post" autocomplete="on" action="/blog/comment/post" name ="form1" > 
+	    			<fieldset>
+	    				<legend>Leave a Comment</legend>
+
+	    				<input type="hidden" name="urlStr" value="/blog/{{$a.PostTime.Format "2006/01/02"}}/{{$a.Title}}">
+	    				<input type="hidden" name="articleId" value="{{$a.Id}}">
+
+	    				<div class="controls">
+	    					<input type="text" name="name" class="input-xlarge" placeholder="Your name" >
+	    				</div>
+	    				<div class="controls">
+	    					<input type="email" name="email" class="input-xlarge" placeholder="Your email">
+	    				</div>
+	    				<div class="controls">
+	    					<input type="text" name="website" class="input-xlarge" placeholder="Your website">
+	    				</div>
+	    				<div class="controls">
+	    					<textarea rows="5" name="content" class="span6" placeholder="Your comment" required></textarea>
+	    				</div>
+	    				<div clsaa="controls">	
+	    					<button type="submit" class="btn">Submit</button>
+	    				</div>
+	    				
+	    			</fieldset>
+	    		</form>
+	    	</div>
+
+{{template "footer" .}}
+{{end}}

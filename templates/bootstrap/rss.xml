@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+	<title>Wendyeq Blog</title>
+	<link>http://www.wendyeq.me</link>
+	<description>Wendyeq Blog Golang</description>
+	<ttl>120</ttl>
+
+	{{range $article := .}}
+	{{$a := $article.MetaData}}
+	<item>
+	  <title>{{$a.Title}}</title>
+	  <description>{{$article.Text |html}}</description>
+	  <link>http://www.wendyeq.me/blog/{{$a.PostTime.Format "2006/01/02"}}/{{$a.Title}}</link>
+	  <guid>{{$a.Id}}</guid>
+	  <pubDate>{{$a.PostTime.Format "Mon, 02 Jan 2006 15:04:05 -0700"}}</pubDate>
+	  <author>{{$a.Author}}</author>
+	  {{range $tag := $a.Tags}}
+	  <category>{{$tag}}</category>
+	  {{end}}
+	</item>
+	{{end}}
+
+  </channel>
+</rss>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		{{$article := .}}
+	    	{{$a := $article.MetaData}}
+		<title>{{$a.Title |html}}</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<!-- Bootstrap -->
+		<link href="/themes/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
+		<style type="text/css">
+		body {
+			padding-top: 60px;
+			padding-bottom: 40px;
+		}
+		</style>
+
+	</head>
+	<body>
+		<div class="navbar navbar-inverse navbar-fixed-top">
+	      <div class="navbar-inner">
+	        <div class="container-fluid">
+	          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+	            <span class="icon-bar"></span>
+	            <span class="icon-bar"></span>
+	            <span class="icon-bar"></span>
+	          </a>
+	          <a class="brand" href="/">Wendyeq</a>
+	          <div class="nav-collapse collapse">
+	            <p class="navbar-text pull-right">
+	            <!--
+	              Logged in as <a href="#" class="navbar-link">Username</a> 
+	          	-->
+	            </p>
+	            <ul class="nav">
+	              <li class="active"><a href="/">Home</a></li>
+	              <!--
+	              <li><a href="/about">About</a></li>
+	              <li><a href="/contact">Contact</a></li>
+	          -->
+	            </ul>
+	          </div><!--/.nav-collapse -->
+	        </div>
+	      </div>
+	    </div>
+
+	    <div class="container-fluid">
+	    	
+	    	<h1>{{$a.Title |html}}</h1>
+
+	    	<div class="meta">{{$a.PostTime.Format "2006/01/02"}} 标签：
+	    		{{range $tag := $a.Tags}}
+	    		<a href="/blog/tag/{{$tag}}">{{$tag}}</a> 
+	    		{{end}}
+	    	</div>	 
+	    	<div>{{$article.Text}}</div>   	
+	    	<hr>
+	    	<footer >
+	    		<p class="muted credit">&copy; 2012  Wendyeq</p>
+	    	</footer>
+	    </div>
+
+		<script src="http://code.jquery.com/jquery-latest.js"></script>
+		<script src="/themes/bootstrap/js/bootstrap.min.js"></script>
+		<script type="text/javascript">
+
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-15518726-6']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+
+		</script>
+	</script>
+	</body>
+</html>

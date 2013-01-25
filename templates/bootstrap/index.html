@@ -1,0 +1,37 @@
+{{define "main"}}
+{{template "header" .}}
+		{{$data := .data}}
+	    <div class="container-fluid">
+	      <div class="row-fluid">
+	        <div class="span3">
+	        	{{template "sidebar" $data}}
+	        </div><!--/span-->
+
+	        <div class="span9">
+	        	
+	        	{{$articles := $data.Articles}}
+	        	{{range $vv := $articles}}
+	        	{{$v := $vv.MetaData}}
+	        	<div class="row-fluid">
+	        		<div class="span12">
+	        			<div class="hero">
+	        				<h1><a href="/blog/{{$v.PostTime.Format "2006/01/02"}}/{{$v.Title}}">{{$v.Title}}</a></h1>
+	        				<p>{{$v.PostTime.Format "2006/01/02"}}  标签：
+	        					{{range $tag := $v.Tags}}
+	        					<a href="/blog/tag/{{$tag}}">{{$tag}}</a> 
+	        					{{end}}
+	        				</p>
+	        				<p>{{$vv.Text}}</p>
+	        				<p> <a class="btn btn-primary " href="/blog/{{$v.PostTime.Format "2006/01/02"}}/{{$v.Title}}">Read more &raquo;</a> 
+	        				</p>
+	        			</div>
+	        		</div>
+	        	</div>
+	        	<hr>
+	        	{{end}}
+	        	
+	        </div>
+	      </div><!--/row-->
+
+{{template "footer" .}}
+{{end}}

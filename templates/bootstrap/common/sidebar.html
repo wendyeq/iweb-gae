@@ -1,0 +1,35 @@
+{{define "sidebar"}}
+<div class="well sidebar-nav">
+	<ul class="nav nav-list">
+		<li class="nav-header">Tags</li>
+		{{range $index, $element := .Tags}}
+		<li><a href="/blog/tag/{{$index}}">{{$index}}({{$element}})</a></li>
+		{{end}}
+		<li class="nav-header">Archives</li>
+		{{range $index, $element := .Archives}}
+		<li><a href="/blog/archive/{{$index.Replace "-" "/" -1}}">{{$index}}({{$element}})</a></li>
+		{{end}}
+
+		<li class="nav-header">Meta</li>
+		<li><a href="/release">Release Notes</a></li>
+		<li><a href="/sitemap">Sitemap</a></li>
+		<li><a href="/feed">RSS</a></li>
+		<li class="divider"></li>
+		<li><img src="/themes/bootstrap/img/email.png" alt="wendyeq#gmail.com" ></li>
+		<!--
+		<li class="divider"></li>
+		<li>
+		<iframe width="100%" height="450" class="share_self"  frameborder="0" scrolling="no" src="http://widget.weibo.com/weiboshow/index.php?language=&width=0&height=450&fansRow=2&ptype=1&speed=0&skin=1&isTitle=0&noborder=0&isWeibo=1&isFans=0&uid=1764590895&verifier=c2b9a5b2&dpc=1"></iframe>
+		</li>
+		-->
+		
+	              <!--
+	              <li class="nav-header">Sidebar</li>
+	              <li class="active"><a href="#">Link</a></li>
+	              <li><a href="#">Link</a></li>
+	              <li><a href="#">Link</a></li>
+	          -->
+	</ul>
+
+</div><!--/.well -->
+{{end}}

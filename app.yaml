@@ -1,0 +1,24 @@
+application: wendyeq-hrd
+version: 2
+runtime: go
+api_version: go1
+
+handlers:
+- url: /themes
+  static_dir: themes
+
+- url: /favicon\.ico
+  static_files: favicon.ico
+  upload: favicon\.ico
+
+- url: /robots\.txt
+  static_files: robots.txt
+  upload: robots\.txt
+
+- url: /admin/.*
+  script: _go_app
+  login: admin
+
+- url: /.*
+  script: _go_app
+

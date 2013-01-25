@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Wendyeq</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<!-- Bootstrap -->
+		<link href="/themes/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
+		<style type="text/css">
+		body {
+			padding-top: 60px;
+			padding-bottom: 40px;
+		}
+		</style>
+
+	</head>
+	<body>
+		<div class="navbar navbar-inverse navbar-fixed-top">
+	      <div class="navbar-inner">
+	        <div class="container-fluid">
+	          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+	            <span class="icon-bar"></span>
+	            <span class="icon-bar"></span>
+	            <span class="icon-bar"></span>
+	          </a>
+	          <a class="brand" href="/">Wendyeq</a>
+	          <div class="nav-collapse collapse">
+	            <p class="navbar-text pull-right">
+	            <!--
+	              Logged in as <a href="#" class="navbar-link">Username</a> 
+	          	-->
+	            </p>
+	            <ul class="nav">
+	              <li class="active"><a href="/">Home</a></li>
+	              <!--
+	              <li><a href="#about">About</a></li>
+	              <li><a href="#contact">Contact</a></li>
+	          -->
+	            </ul>
+	          </div><!--/.nav-collapse -->
+	        </div>
+	      </div>
+	    </div>
+
+	    <div class="container">
+	    	{{with .}}
+	    	<form method="post" autocomplete="on" action="/admin/article/post" name ="form1" > 
+				<input type="hidden" name="id" value="{{.Id}}">
+
+	    		<div class="controls">
+	    			<label>标题：</label>
+	    			<span class="input-large uneditable-input">{{.Title}}</span>
+	    		</div>
+	    		<div class="controls">
+	    			<label>标签：</label>
+	    			<input type="text" name="tags" value="{{range $tag := .Tags}}{{$tag}} {{end}}">
+	    		</div>
+	    		<div class="controls">
+	    			<textarea rows="4" name="summary" class="span5">{{.Summary}}</textarea>
+	    		</div>
+	    		<div class="controls">
+	    			<textarea rows="8" name="content" class="span8" >{{.Content | printf "%s"}}</textarea>
+	    		</div>
+	    		<div class="controls">
+	    			<input class="btn" type="button" value="preview" onclick=preview()></input>
+	    			<input class="btn" type="button" value="提交" onclick=update()></input>
+	    		</div>
+	    	</form>
+	    	{{else}}
+			<form method="post" autocomplete="on" action="/admin/article/post" name ="form1" > 
+
+	    		<div class="controls">
+	    			<label>标题：</label>
+	    			<input type="text" name="title" required>
+	    		</div>
+	    		<div class="controls">
+	    			<label>标签：</label>
+	    			<input type="text" name="tags">
+	    		</div>
+	    		<div class="controls">
+	    			<textarea rows="4" name="summary" class="span5"></textarea>
+	    		</div>
+	    		<div class="controls">
+	    			<textarea rows="8" name="content" class="span8" ></textarea>
+	    		</div>
+	    		<div class="controls">
+	    			<input class="btn" type="button" value="preview" onclick=preview()></input>
+	    			<input class="btn" type="button" value="提交" onclick=save()></input>
+	    		</div>
+	    	</form>
+	    	{{end}}
+	    	
+	    	<hr>
+	    	<footer >
+	    		<p class="muted credit">&copy; 2012 Wendyeq</p>
+	    	</footer>
+	    </div>
+
+		<script src="http://code.jquery.com/jquery-latest.js"></script>
+		<script src="/themes/bootstrap/js/bootstrap.min.js"></script>
+		<script>
+			function preview() {
+				document.form1.action="/admin/article/preview";
+				document.form1.target="_blank"
+				document.form1.submit();
+			}
+			function save() {
+				document.form1.action="/admin/article/post";
+				document.form1.target="_self"
+				document.form1.submit();
+			}
+			function update() {
+				document.form1.action="/admin/article/update";
+				document.form1.target="_self"
+				document.form1.submit();
+			}
+		</script>
+	</body>
+</html>

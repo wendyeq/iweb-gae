@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+	{{range $article := .}}
+	{{$a := $article.MetaData}}
+	<url> 
+		<loc>http://www.wendyeq.me/blog/{{$a.PostTime.Format "2006/01/02"}}/{{$a.Title}}</loc> 
+		<lastmod>{{$a.UpdateTime.Format "2006-01-02T15:04:05+08:00"}}</lastmod>
+		<changefreq>weekly</changefreq>
+	</url>
+  	{{end}}
+</urlset>
