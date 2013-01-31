@@ -1,3 +1,4 @@
+// +build appengine
 package blog
 
 import (
