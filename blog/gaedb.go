@@ -1,15 +1,15 @@
+// +build appengine
 package blog
 
 import (
 	"appengine"
 	"appengine/datastore"
 	"fmt"
-	"net/http"
 	"time"
 )
 
-func (this *ArticleMetaData) Save(r *http.Request) (err error) {
-	c := appengine.NewContext(r)
+//save article and save tags transaction
+func (this *ArticleMetaData) Save(c appengine.Context) (err error) {
 	uuid, err := GenUUID()
 	if err != nil {
 		return err
@@ -28,17 +28,21 @@ func (this *ArticleMetaData) Save(r *http.Request) (err error) {
 				tagsKey[id] = datastore.NewKey(c, "Tags", tagId, 0, nil)
 			}
 			_, err = datastore.PutMulti(c, tagsKey, tags)
+			if err != nil {
+				return err
+			}
 		}
 		_, err = datastore.Put(c, k, this)
 		return err
+
 	}, &datastore.TransactionOptions{XG: true})
 
 	return err
 }
 
-func (this *ArticleMetaData) Update(r *http.Request) (articleMetaData *ArticleMetaData, err error) {
+//update article ,
+func (this *ArticleMetaData) Update(c appengine.Context) (articleMetaData *ArticleMetaData, err error) {
 	articleMetaData = new(ArticleMetaData)
-	c := appengine.NewContext(r)
 	k := datastore.NewKey(c, "Article", this.Id, 0, nil)
 	err = datastore.Get(c, k, articleMetaData)
 	if err != nil {
@@ -52,11 +56,8 @@ func (this *ArticleMetaData) Update(r *http.Request) (articleMetaData *ArticleMe
 	return articleMetaData, err
 }
 
-func (this *ArticleMetaData) Delete(r *http.Request) (err error) {
-	c := appengine.NewContext(r)
-	fmt.Println(this.Id)
+func (this *ArticleMetaData) Delete(c appengine.Context) (err error) {
 	k := datastore.NewKey(c, "Article", this.Id, 0, nil)
-
 	err = datastore.RunInTransaction(c, func(c appengine.Context) error {
 		err = datastore.Get(c, k, this)
 		if err != nil {
@@ -82,8 +83,7 @@ func (this *ArticleMetaData) Delete(r *http.Request) (err error) {
 	return err
 }
 
-func (this *ArticleMetaData) GetOne(r *http.Request) (err error) {
-	c := appengine.NewContext(r)
+func (this *ArticleMetaData) GetOne(c appengine.Context) (err error) {
 	if len(this.Id) > 0 {
 		err = datastore.RunInTransaction(c, func(c appengine.Context) error {
 			k := datastore.NewKey(c, "Article", this.Id, 0, nil)
@@ -120,14 +120,13 @@ func (this *ArticleMetaData) GetOne(r *http.Request) (err error) {
 	return err
 }
 
-func (this *ArticleMetaData) GetAll(r *http.Request) (articles []ArticleMetaData, err error) {
-	c := appengine.NewContext(r)
+func (this *ArticleMetaData) GetAll(c appengine.Context) (articles []ArticleMetaData, err error) {
 	q := datastore.NewQuery("Article").Order("-PostTime").Limit(1000)
 	_, err = q.GetAll(c, &articles)
 	return articles, err
 }
 
-func (this *ArticleMetaData) GetAllByTag(r *http.Request, tag string) (articles []ArticleMetaData, err error) {
+func (this *ArticleMetaData) GetAllByTag(c appengine.Context, tag string) (articles []ArticleMetaData, err error) {
 	/*
 		var tags []Tags
 		var keys []*datastore.Key
@@ -145,13 +144,12 @@ func (this *ArticleMetaData) GetAllByTag(r *http.Request, tag string) (articles 
 		err = datastore.GetMulti(c, keys, articles)
 		return articles, err
 	*/
-	c := appengine.NewContext(r)
 	q := datastore.NewQuery("Article").Filter("Tags = ", tag).Limit(1000)
 	_, err = q.GetAll(c, &articles)
 	return articles, err
 }
 
-func (this *ArticleMetaData) GetAllByArchive(r *http.Request, archive string) (articles []ArticleMetaData, err error) {
+func (this *ArticleMetaData) GetAllByArchive(c appengine.Context, archive string) (articles []ArticleMetaData, err error) {
 	year := archive[0:4]
 	month := archive[5:]
 	fmt.Println("year=" + year)
@@ -162,7 +160,6 @@ func (this *ArticleMetaData) GetAllByArchive(r *http.Request, archive string) (a
 	beginTime, err := time.Parse("2006-01-02", year+"-"+month+"-01")
 	endTime := beginTime.AddDate(0, 1, 0)
 
-	c := appengine.NewContext(r)
 	q := datastore.NewQuery("Article").
 		Filter("PostTime >=", beginTime).
 		Filter("PostTime <", endTime).
@@ -173,10 +170,9 @@ func (this *ArticleMetaData) GetAllByArchive(r *http.Request, archive string) (a
 	return articles, err
 }
 
-func GetAllTag(r *http.Request) (m map[string]int, err error) {
+func GetAllTag(c appengine.Context) (m map[string]int, err error) {
 	var tags []Tags
 	m = make(map[string]int)
-	c := appengine.NewContext(r)
 	_, err = datastore.NewQuery("Tags").GetAll(c, &tags)
 	for _, value := range tags {
 		m[value.Tag]++
@@ -184,10 +180,9 @@ func GetAllTag(r *http.Request) (m map[string]int, err error) {
 	return m, err
 }
 
-func GetAllArchive(r *http.Request) (m map[NewString]int, err error) {
+func GetAllArchive(c appengine.Context) (m map[NewString]int, err error) {
 	var articleMetaData []ArticleMetaData
 	m = make(map[NewString]int)
-	c := appengine.NewContext(r)
 	_, err = datastore.NewQuery("Article").Order("-PostTime").GetAll(c, &articleMetaData)
 	for _, value := range articleMetaData {
 		timeStr := value.PostTime.Format("2006-01")
@@ -196,8 +191,7 @@ func GetAllArchive(r *http.Request) (m map[NewString]int, err error) {
 	return m, err
 }
 
-func (this *Comment) Save(r *http.Request) (err error) {
-	c := appengine.NewContext(r)
+func (this *Comment) Save(c appengine.Context) (err error) {
 	uuid, err := GenUUID()
 	if err != nil {
 		return err
@@ -208,10 +202,21 @@ func (this *Comment) Save(r *http.Request) (err error) {
 	return err
 }
 
-func (this *Comment) GetAll(r *http.Request) (comments []Comment, err error) {
-	c := appengine.NewContext(r)
+func (this *Comment) Delete(c appengine.Context) (err error) {
+	k := datastore.NewKey(c, "Comment", this.Id, 0, nil)
+	err = datastore.Delete(c, k)
+	return err
+}
+
+func (this *Comment) GetAll(c appengine.Context) (comments []Comment, err error) {
 	q := datastore.NewQuery("Comment").
 		Filter("ArticleId = ", this.ArticleId).Order("PostTime").Limit(10)
+	_, err = q.GetAll(c, &comments)
+	return comments, err
+}
+
+func GetAllComments(c appengine.Context) (comments []Comment, err error) {
+	q := datastore.NewQuery("Comment").Order("-PostTime").Limit(100)
 	_, err = q.GetAll(c, &comments)
 	return comments, err
 }
