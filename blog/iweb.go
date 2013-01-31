@@ -1,3 +1,4 @@
+// +build appengine
 package blog
 
 import (
@@ -37,6 +38,11 @@ var (
 
 	viewTPL = template.Must(template.ParseFiles(
 		"templates/"+themes+"/view.html",
+		"templates/"+themes+"/common/header.html",
+		"templates/"+themes+"/common/footer.html"))
+
+	commentTPL = template.Must(template.ParseFiles(
+		"templates/"+themes+"/comments.html",
 		"templates/"+themes+"/common/header.html",
 		"templates/"+themes+"/common/footer.html"))
 
@@ -97,6 +103,7 @@ func PreViewArticleHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func SaveArticleHandler(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
 	article := &ArticleMetaData{}
 	article.Author, _ = GetConfig()["author"].(string)
 	article.Title = strings.TrimSpace(r.FormValue("title"))
@@ -116,7 +123,7 @@ func SaveArticleHandler(w http.ResponseWriter, r *http.Request) {
 	article.Flag = 1
 	//article.Flag, _ = strconv.ParseInt(r.FormValue("flag"), 10, 64)
 	article.Count = 0
-	err := article.Save(r)
+	err := article.Save(c)
 	if err == nil {
 		PingServer(w, r)
 		http.Redirect(w, r, "/", http.StatusFound)
@@ -126,11 +133,12 @@ func SaveArticleHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func EditArticleHandler(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
 	id := r.FormValue("id")
 	if id != "" {
 		article := new(ArticleMetaData)
 		article.Id = id
-		err := article.GetOne(r)
+		err := article.GetOne(c)
 		if err != nil {
 			serveError(w, fmt.Errorf("edit old article : id = %v, err = %v", id, err))
 			return
@@ -143,6 +151,7 @@ func EditArticleHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateArticleHandler(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
 	if r.Method != "POST" {
 		http.NotFound(w, r)
 		return
@@ -162,7 +171,7 @@ func UpdateArticleHandler(w http.ResponseWriter, r *http.Request) {
 	now := time.Now()
 	article.UpdateTime = now
 	//article.Flag, _ = strconv.ParseInt(r.FormValue("flag"), 10, 64)
-	article, err := article.Update(r)
+	article, err := article.Update(c)
 	if err != nil {
 		serveError(w, err)
 		return
@@ -174,6 +183,7 @@ func UpdateArticleHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteArticleHandler(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
 	id := r.FormValue("id")
 	if id == "" {
 		http.NotFound(w, r)
@@ -182,7 +192,7 @@ func DeleteArticleHandler(w http.ResponseWriter, r *http.Request) {
 	article := new(ArticleMetaData)
 	fmt.Println(id)
 	article.Id = id
-	err := article.Delete(r)
+	err := article.Delete(c)
 	if err != nil {
 		serveError(w, err)
 		return
@@ -194,28 +204,37 @@ func DeleteArticleHandler(w http.ResponseWriter, r *http.Request) {
 var dateTime = regexp.MustCompile("^[0-9]{4}/[0-9]{2}/[0-9]{2}/+")
 
 func ViewArticleHandler(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
 	beginTime := time.Now()
-
+	articleMetaData := &ArticleMetaData{}
 	url := r.URL.Path[len("/blog/"):]
-	if !dateTime.MatchString(url) {
+	id := r.FormValue("id")
+	if id != "" {
+		articleMetaData.Id = id
+
+	} else if dateTime.MatchString(url) {
+		year := url[0:4]
+		month := url[5:7]
+		day := url[8:10]
+		title := url[11:]
+
+		postTime, _ := time.Parse("2006-01-02", year+"-"+month+"-"+day)
+		articleMetaData.PostTime = postTime
+		articleMetaData.UpdateTime = postTime.AddDate(0, 0, 1)
+		articleMetaData.Title = title
+		//articleMetaData := &ArticleMetaData{Title: title, PostTime: postTime, UpdateTime: updateTime}
+
+	} else {
 		http.NotFound(w, r)
 		return
 	}
-	year := url[0:4]
-	month := url[5:7]
-	day := url[8:10]
-	title := url[11:]
-
-	postTime, _ := time.Parse("2006-01-02", year+"-"+month+"-"+day)
-	updateTime := postTime.AddDate(0, 0, 1)
-	articleMetaData := &ArticleMetaData{Title: title, PostTime: postTime, UpdateTime: updateTime}
-	err := articleMetaData.GetOne(r)
+	err := articleMetaData.GetOne(c)
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
 	comment := &Comment{ArticleId: articleMetaData.Id}
-	comments, err := comment.GetAll(r)
+	comments, err := comment.GetAll(c)
 	if err != nil {
 		serveError(w, err)
 		return
@@ -239,6 +258,7 @@ func ViewArticleHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func SaveCommentHandler(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
 	comment := &Comment{}
 	comment.ArticleId = r.FormValue("articleId")
 	comment.ParentId = r.FormValue("parentId")
@@ -249,17 +269,54 @@ func SaveCommentHandler(w http.ResponseWriter, r *http.Request) {
 	comment.Content = r.FormValue("content")
 	now := time.Now()
 	comment.PostTime = now
-	err := comment.Save(r)
+	err := comment.Save(c)
 	if err != nil {
 		serveError(w, err)
 	}
 	urlStr := r.FormValue("urlStr")
 	http.Redirect(w, r, urlStr, http.StatusFound)
 }
+
+func DeleteCommentHandler(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	id := r.FormValue("id")
+	if id == "" {
+		http.NotFound(w, r)
+		return
+	}
+	comment := new(Comment)
+	fmt.Println(id)
+	comment.Id = id
+	err := comment.Delete(c)
+	if err != nil {
+		serveError(w, err)
+		return
+	}
+	http.Redirect(w, r, "/admin/comment/list", http.StatusFound)
+}
+
+func ListCommentHandler(w http.ResponseWriter, r *http.Request) {
+	beginTime := time.Now()
+	c := appengine.NewContext(r)
+	comments, err := GetAllComments(c)
+	if err != nil {
+		serveError(w, err)
+		return
+	}
+	data := make(map[string]interface{})
+	data["data"] = comments
+	config := GetConfig()
+	endTime := time.Now()
+	config["costtime"] = endTime.Sub(beginTime)
+	data["config"] = config
+	commentTPL.ExecuteTemplate(w, "main", data)
+}
+
 func AdminHandler(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
 	beginTime := time.Now()
 	articleMetaData := &ArticleMetaData{}
-	articleMetaDatas, err := articleMetaData.GetAll(r)
+	articleMetaDatas, err := articleMetaData.GetAll(c)
 	//err = fmt.Errorf("format %v ", "get all err")
 	if err != nil {
 		serveError(w, err)
@@ -270,13 +327,13 @@ func AdminHandler(w http.ResponseWriter, r *http.Request) {
 		articles[key].MetaData = value
 		articles[key].Text = template.HTML(blackfriday.MarkdownBasic([]byte(value.Content)))
 	}
-	tags, err := GetAllTag(r)
+	tags, err := GetAllTag(c)
 	if err != nil {
 		serveError(w, err)
 		return
 	}
 
-	archives, err := GetAllArchive(r)
+	archives, err := GetAllArchive(c)
 	if err != nil {
 		serveError(w, err)
 		return
@@ -293,6 +350,7 @@ func AdminHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
 	beginTime := time.Now()
 
 	if r.URL.Path != "/" {
@@ -300,7 +358,7 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	articleMetaData := &ArticleMetaData{}
-	articleMetaDatas, err := articleMetaData.GetAll(r)
+	articleMetaDatas, err := articleMetaData.GetAll(c)
 	//err = fmt.Errorf("format %v ", "get all err")
 	if err != nil {
 		serveError(w, err)
@@ -311,12 +369,12 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 		articles[key].MetaData = value
 		articles[key].Text = template.HTML(blackfriday.MarkdownBasic([]byte(value.Content)))
 	}
-	tags, err := GetAllTag(r)
+	tags, err := GetAllTag(c)
 	if err != nil {
 		serveError(w, err)
 		return
 	}
-	archives, err := GetAllArchive(r)
+	archives, err := GetAllArchive(c)
 	if err != nil {
 		serveError(w, err)
 		return
@@ -334,10 +392,11 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 
 //show tag
 func TagHandler(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
 	beginTime := time.Now()
 	tag := r.URL.Path[len("/blog/tag/"):]
 	articleMetaData := &ArticleMetaData{}
-	articleMetaDatas, err := articleMetaData.GetAllByTag(r, tag)
+	articleMetaDatas, err := articleMetaData.GetAllByTag(c, tag)
 	if err != nil {
 		http.NotFound(w, r)
 		return
@@ -347,12 +406,12 @@ func TagHandler(w http.ResponseWriter, r *http.Request) {
 		articles[key].MetaData = value
 		articles[key].Text = template.HTML(blackfriday.MarkdownBasic([]byte(value.Content)))
 	}
-	tags, err := GetAllTag(r)
+	tags, err := GetAllTag(c)
 	if err != nil {
 		serveError(w, err)
 	}
 
-	archives, err := GetAllArchive(r)
+	archives, err := GetAllArchive(c)
 	if err != nil {
 		serveError(w, err)
 		return
@@ -371,10 +430,11 @@ func TagHandler(w http.ResponseWriter, r *http.Request) {
 
 //show archive
 func ArchiveHandler(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
 	beginTime := time.Now()
 	archive := r.URL.Path[len("/blog/archive/"):]
 	articleMetaData := ArticleMetaData{}
-	articleMetaDatas, err := articleMetaData.GetAllByArchive(r, archive)
+	articleMetaDatas, err := articleMetaData.GetAllByArchive(c, archive)
 	if err != nil {
 		http.NotFound(w, r)
 		return
@@ -384,11 +444,11 @@ func ArchiveHandler(w http.ResponseWriter, r *http.Request) {
 		articles[key].MetaData = value
 		articles[key].Text = template.HTML(blackfriday.MarkdownBasic([]byte(value.Content)))
 	}
-	tags, err := GetAllTag(r)
+	tags, err := GetAllTag(c)
 	if err != nil {
 		serveError(w, err)
 	}
-	archives, err := GetAllArchive(r)
+	archives, err := GetAllArchive(c)
 	if err != nil {
 		serveError(w, err)
 		return
@@ -409,8 +469,9 @@ func ArchiveHandler(w http.ResponseWriter, r *http.Request) {
 
 //show rss
 func RssHandler(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
 	articleMetaData := ArticleMetaData{}
-	articleMetaDatas, err := articleMetaData.GetAll(r)
+	articleMetaDatas, err := articleMetaData.GetAll(c)
 	if err != nil {
 		http.NotFound(w, r)
 		return
@@ -425,8 +486,9 @@ func RssHandler(w http.ResponseWriter, r *http.Request) {
 
 //show sitemap
 func SitemapHandler(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
 	articleMetaData := ArticleMetaData{}
-	articleMetaDatas, err := articleMetaData.GetAll(r)
+	articleMetaDatas, err := articleMetaData.GetAll(c)
 	if err != nil {
 		http.NotFound(w, r)
 		return

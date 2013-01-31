@@ -1,0 +1,33 @@
+{{define "main"}}
+{{template "header" .}}
+        {{$data := .data}}
+        <div class="container-fluid">
+          <div class="row-fluid">
+            <div class="span3">
+               
+            </div><!--/span-->
+
+            <div class="span9">
+               
+                {{range $comment := $data}}
+                <div class="row-fluid">
+                    <div class="span12">
+                        <div class="hero">
+                            <h1><a href="#">{{$comment.Author}}</a>  <a class="btn btn-danger " href="/admin/comment/delete?id={{$comment.Id}}">Delete</a></h1>
+                            <p>author: {{$comment.Author}}</p>
+                            <p>email: {{$comment.Email}}</p>
+                            <p>website: {{$comment.Website}}</p>
+                            <p>posttime: {{$comment.PostTime}}</p>
+                            <p>content: {{$comment.Content}}</p>
+                            <p>ArticleId: <a href="/blog/?id={{$comment.ArticleId}}">{{$comment.ArticleId}}</a></p>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                {{end}}
+
+            </div>
+          </div><!--/row-->
+
+{{template "footer" .}}
+{{end}}

@@ -1,3 +1,4 @@
+// +build appengine
 package blog
 
 import (
@@ -25,6 +26,8 @@ func init() {
 	http.HandleFunc("/admin/article/delete", DeleteArticleHandler)
 	http.HandleFunc("/admin/article/preview", PreViewArticleHandler)
 
+	http.HandleFunc("/admin/comment/list", ListCommentHandler)
+	http.HandleFunc("/admin/comment/delete", DeleteCommentHandler)
 	http.HandleFunc("/feed", RssHandler)
 	http.HandleFunc("/feed/atom", RssHandler)
 	http.HandleFunc("/rss.xml", RssHandler)
