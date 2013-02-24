@@ -1,4 +1,4 @@
-application: wendyeqweb
+application: wendyeq-hrd
 version: 2
 runtime: go
 api_version: go1

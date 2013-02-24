@@ -1,8 +1,16 @@
+### Version 0.0.5 - February 24, 2013
+
+* 重构Context
+* 添加分页功能
+* 实现列出所有Comment功能
+* 添加测试模块
+* 列表默认显示全部内容改为显示概要
+
+
 ### Version 0.0.4 - January 15, 2013
 
 * add costtime
 * 优化tags查询
-
 
 ### Version 0.0.3 - December 26, 2012
 
@@ -16,9 +24,9 @@
 
 
 ### Version 0.0.2 - December 18, 2012
-	
-* 添加RSS支持		url = /feed
-* 显示Release Notes	url = /release
+    
+* 添加RSS支持       url = /feed
+* 显示Release Notes   url = /release
 * 添加配置文件
 * seo优化，添加keywords
 * 添加robots.txt
