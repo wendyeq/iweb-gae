@@ -31,6 +31,15 @@
 	        	{{end}}
 	        	
 	        </div>
+
+	        <ul class="pager">
+	        	
+	        	{{if .args.hasPre}}
+  				<li><a href="{{.args.url}}?size={{.args.size}}&pageSize={{.args.prePageSize}}">&larr; Pre</a></li>
+  				{{end}}
+  				<li><a href="{{.args.url}}?size={{.args.size}}&pageSize={{.args.nextPageSize}}">Next &rarr;</a></li>
+			</ul>
+
 	      </div><!--/row-->
 
 {{template "footer" .}}
