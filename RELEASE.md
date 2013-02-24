@@ -1,3 +1,12 @@
+### Version 0.0.5 - February 24, 2013
+
+* 重构Context
+* 添加分页功能
+* 实现列出所有Comment功能
+* 添加测试模块
+* 列表默认显示全部内容改为显示概要
+
+
 ### Version 0.0.4 - January 15, 2013
 
 * add costtime
