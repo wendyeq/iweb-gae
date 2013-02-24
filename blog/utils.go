@@ -22,14 +22,19 @@ func GenUUID() (string, error) {
 	return hex.EncodeToString(uuid), nil
 }
 
-//var ctx map[string]interface{}
-func GetContext() map[string]interface{} {
-	ctx := make(map[string]interface{})
-	ctx["author"] = "wendyeq"
-	ctx["title"] = "Wendyeq"
-	ctx["archive"] = "2012/11"
-	ctx["themes"] = "bootstrap"
-	ctx["keywords"] = "wendyeq, wendyeq.me, Go, golang, gae, google app engine, mongodb"
+//var ctx Context
+func GetContext() Context {
+	ctx := Context{}
+	args := make(map[string]interface{})
+	args["author"] = "wendyeq"
+	args["title"] = "Wendyeq"
+	args["brandName"] = "Wendyeq"
+	args["archive"] = "2012/11"
+	args["themes"] = "bootstrap"
+	args["keywords"] = "wendyeq, wendyeq.me, Go, golang, gae, google app engine, mongodb"
+	args["size"] = 5
+	args["pageSize"] = 1
+	ctx.Args = args
 	return ctx
 }
 

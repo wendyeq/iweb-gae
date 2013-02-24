@@ -26,10 +26,11 @@ func BenchmarkGenUUID(b *testing.B) {
 
 func TestGetContext(t *testing.T) {
 	ctx := GetContext()
-	if len(ctx) <= 0 {
-		t.Fatalf("GetContext err: %v", len(ctx))
+
+	if len(ctx.Args) <= 0 {
+		t.Fatalf("GetContext err: %v", len(ctx.Args))
 	}
-	if _, ok := ctx["author"]; !ok {
+	if _, ok := ctx.Args["author"]; !ok {
 		t.Fatal("GetContext author is not exist!")
 	}
 }
