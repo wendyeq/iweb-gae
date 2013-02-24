@@ -2,9 +2,15 @@
 package blog
 
 import (
+	"appengine"
 	"html/template"
 	"time"
 )
+
+type Context struct {
+	GAEContext appengine.Context
+	Args       map[string]interface{}
+}
 
 type ArticleMetaData struct {
 	Id         string

@@ -17,23 +17,24 @@ func GetArticleForTest() (a *ArticleMetaData) {
 
 // Save, Update, GetOne, Delete 
 func TestArticle(t *testing.T) {
+	ctx := GetContext()
 	c, err := appenginetesting.NewContext(nil)
 	defer c.Close()
 
 	if err != nil {
 		t.Fatalf("NewContext: %v", err)
 	}
-
+	ctx.GAEContext = c
 	//test Save
 	firstArticle := GetArticleForTest()
-	err = firstArticle.Save(c)
+	err = firstArticle.Save(ctx)
 	if err != nil {
 		t.Fatalf("Save Article: %v", err)
 	}
 
 	//test GetOne using Id
 	secondArticle := &ArticleMetaData{Id: firstArticle.Id}
-	err = secondArticle.GetOne(c)
+	err = secondArticle.GetOne(ctx)
 	if err != nil {
 		t.Fatalf("GetOne Article Using Id : %v", err)
 	}
@@ -46,7 +47,7 @@ func TestArticle(t *testing.T) {
 		PostTime:   firstArticle.PostTime,
 		UpdateTime: firstArticle.PostTime.AddDate(0, 0, 1),
 	}
-	err = secondArticle.GetOne(c)
+	err = secondArticle.GetOne(ctx)
 	if err != nil {
 		t.Fatalf("GetOne Article Using time and title : %v", err)
 	}
@@ -56,7 +57,7 @@ func TestArticle(t *testing.T) {
 
 	//test Update
 	secondArticle.UpdateTime = secondArticle.PostTime.AddDate(0, 0, 1)
-	threeArticle, err := secondArticle.Update(c)
+	threeArticle, err := secondArticle.Update(ctx)
 	if err != nil {
 		t.Fatalf("Update Article: %v", err)
 	}
@@ -66,7 +67,7 @@ func TestArticle(t *testing.T) {
 	}
 
 	//test Delete
-	err = threeArticle.Delete(c)
+	err = threeArticle.Delete(ctx)
 	if err != nil {
 		t.Fatalf("Delete Article: %v", err)
 	}

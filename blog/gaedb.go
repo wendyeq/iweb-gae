@@ -9,7 +9,8 @@ import (
 )
 
 //save article and save tags transaction
-func (this *ArticleMetaData) Save(c appengine.Context) (err error) {
+func (this *ArticleMetaData) Save(ctx Context) (err error) {
+	c := ctx.GAEContext
 	uuid, err := GenUUID()
 	if err != nil {
 		return err
@@ -41,7 +42,8 @@ func (this *ArticleMetaData) Save(c appengine.Context) (err error) {
 }
 
 //update article ,
-func (this *ArticleMetaData) Update(c appengine.Context) (articleMetaData *ArticleMetaData, err error) {
+func (this *ArticleMetaData) Update(ctx Context) (articleMetaData *ArticleMetaData, err error) {
+	c := ctx.GAEContext
 	articleMetaData = new(ArticleMetaData)
 	k := datastore.NewKey(c, "Article", this.Id, 0, nil)
 	err = datastore.Get(c, k, articleMetaData)
@@ -56,7 +58,8 @@ func (this *ArticleMetaData) Update(c appengine.Context) (articleMetaData *Artic
 	return articleMetaData, err
 }
 
-func (this *ArticleMetaData) Delete(c appengine.Context) (err error) {
+func (this *ArticleMetaData) Delete(ctx Context) (err error) {
+	c := ctx.GAEContext
 	k := datastore.NewKey(c, "Article", this.Id, 0, nil)
 	err = datastore.RunInTransaction(c, func(c appengine.Context) error {
 		err = datastore.Get(c, k, this)
@@ -83,7 +86,8 @@ func (this *ArticleMetaData) Delete(c appengine.Context) (err error) {
 	return err
 }
 
-func (this *ArticleMetaData) GetOne(c appengine.Context) (err error) {
+func (this *ArticleMetaData) GetOne(ctx Context) (err error) {
+	c := ctx.GAEContext
 	if len(this.Id) > 0 {
 		err = datastore.RunInTransaction(c, func(c appengine.Context) error {
 			k := datastore.NewKey(c, "Article", this.Id, 0, nil)
@@ -120,36 +124,49 @@ func (this *ArticleMetaData) GetOne(c appengine.Context) (err error) {
 	return err
 }
 
-func (this *ArticleMetaData) GetAll(c appengine.Context) (articles []ArticleMetaData, err error) {
-	q := datastore.NewQuery("Article").Order("-PostTime").Limit(1000)
+func (this *ArticleMetaData) GetAll(ctx Context) (articles []ArticleMetaData, err error) {
+	c := ctx.GAEContext
+	size, ok := ctx.Args["size"].(int)
+	if !ok || size <= 0 {
+		size = 5
+		ctx.Args["size"] = size
+	}
+	pageSize, ok := ctx.Args["pageSize"].(int)
+	if !ok || pageSize <= 0 {
+		pageSize = 1
+		ctx.Args["pageSize"] = pageSize
+	}
+	offset := size * (pageSize - 1)
+
+	q := datastore.NewQuery("Article").Order("-PostTime").Offset(offset).Limit(size)
 	_, err = q.GetAll(c, &articles)
 	return articles, err
 }
 
-func (this *ArticleMetaData) GetAllByTag(c appengine.Context, tag string) (articles []ArticleMetaData, err error) {
-	/*
-		var tags []Tags
-		var keys []*datastore.Key
-		c := appengine.NewContext(r)
-		q := datastore.NewQuery("Tags").Filter("Tag =", tag).Limit(100)
-		_, err = q.GetAll(c, &tags)
-		if err != nil {
-			return articles, err
-		}
-		for _, value := range tags {
-			keys = append(keys, datastore.NewKey(c, "Article", value.ArticleId, 0, nil))
-		}
-		articles = make([]ArticleMetaData, len(keys))
-		//len(articles) must equal len(keys)
-		err = datastore.GetMulti(c, keys, articles)
-		return articles, err
-	*/
-	q := datastore.NewQuery("Article").Filter("Tags = ", tag).Limit(1000)
+func (this *ArticleMetaData) GetAllByTag(ctx Context, tag string) (articles []ArticleMetaData, err error) {
+	c := ctx.GAEContext
+
+	size, ok := ctx.Args["size"].(int)
+	if !ok || size <= 0 {
+		size = 5
+		ctx.Args["size"] = size
+	}
+	fmt.Println("size tag : ", size)
+	pageSize, ok := ctx.Args["pageSize"].(int)
+	if !ok || pageSize <= 0 {
+		pageSize = 1
+		ctx.Args["pageSize"] = pageSize
+	}
+	offset := size * (pageSize - 1)
+
+	q := datastore.NewQuery("Article").Filter("Tags = ", tag).Offset(offset).Limit(size)
 	_, err = q.GetAll(c, &articles)
 	return articles, err
 }
 
-func (this *ArticleMetaData) GetAllByArchive(c appengine.Context, archive string) (articles []ArticleMetaData, err error) {
+func (this *ArticleMetaData) GetAllByArchive(ctx Context, archive string) (articles []ArticleMetaData, err error) {
+	c := ctx.GAEContext
+
 	year := archive[0:4]
 	month := archive[5:]
 	fmt.Println("year=" + year)
@@ -160,17 +177,31 @@ func (this *ArticleMetaData) GetAllByArchive(c appengine.Context, archive string
 	beginTime, err := time.Parse("2006-01-02", year+"-"+month+"-01")
 	endTime := beginTime.AddDate(0, 1, 0)
 
+	size, ok := ctx.Args["size"].(int)
+	if !ok || size <= 0 {
+		size = 5
+		ctx.Args["size"] = size
+	}
+	pageSize, ok := ctx.Args["pageSize"].(int)
+	if !ok || pageSize <= 0 {
+		pageSize = 1
+		ctx.Args["pageSize"] = pageSize
+	}
+	offset := size * (pageSize - 1)
+
 	q := datastore.NewQuery("Article").
 		Filter("PostTime >=", beginTime).
 		Filter("PostTime <", endTime).
 		Order("-PostTime").
-		Limit(100)
+		Offset(offset).
+		Limit(size)
 
 	_, err = q.GetAll(c, &articles)
 	return articles, err
 }
 
-func GetAllTag(c appengine.Context) (m map[string]int, err error) {
+func GetAllTag(ctx Context) (m map[string]int, err error) {
+	c := ctx.GAEContext
 	var tags []Tags
 	m = make(map[string]int)
 	_, err = datastore.NewQuery("Tags").GetAll(c, &tags)
@@ -180,7 +211,8 @@ func GetAllTag(c appengine.Context) (m map[string]int, err error) {
 	return m, err
 }
 
-func GetAllArchive(c appengine.Context) (m map[NewString]int, err error) {
+func GetAllArchive(ctx Context) (m map[NewString]int, err error) {
+	c := ctx.GAEContext
 	var articleMetaData []ArticleMetaData
 	m = make(map[NewString]int)
 	_, err = datastore.NewQuery("Article").Order("-PostTime").GetAll(c, &articleMetaData)
@@ -191,7 +223,8 @@ func GetAllArchive(c appengine.Context) (m map[NewString]int, err error) {
 	return m, err
 }
 
-func (this *Comment) Save(c appengine.Context) (err error) {
+func (this *Comment) Save(ctx Context) (err error) {
+	c := ctx.GAEContext
 	uuid, err := GenUUID()
 	if err != nil {
 		return err
@@ -202,20 +235,23 @@ func (this *Comment) Save(c appengine.Context) (err error) {
 	return err
 }
 
-func (this *Comment) Delete(c appengine.Context) (err error) {
+func (this *Comment) Delete(ctx Context) (err error) {
+	c := ctx.GAEContext
 	k := datastore.NewKey(c, "Comment", this.Id, 0, nil)
 	err = datastore.Delete(c, k)
 	return err
 }
 
-func (this *Comment) GetAll(c appengine.Context) (comments []Comment, err error) {
+func (this *Comment) GetAll(ctx Context) (comments []Comment, err error) {
+	c := ctx.GAEContext
 	q := datastore.NewQuery("Comment").
 		Filter("ArticleId = ", this.ArticleId).Order("PostTime").Limit(10)
 	_, err = q.GetAll(c, &comments)
 	return comments, err
 }
 
-func GetAllComments(c appengine.Context) (comments []Comment, err error) {
+func GetAllComments(ctx Context) (comments []Comment, err error) {
+	c := ctx.GAEContext
 	q := datastore.NewQuery("Comment").Order("-PostTime").Limit(100)
 	_, err = q.GetAll(c, &comments)
 	return comments, err
