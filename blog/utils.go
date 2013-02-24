@@ -22,16 +22,15 @@ func GenUUID() (string, error) {
 	return hex.EncodeToString(uuid), nil
 }
 
-//var config map[string]interface{}
-func GetConfig() map[string]interface{} {
-	config := make(map[string]interface{})
-	config["author"] = "wendyeq"
-	config["title"] = "Wendyeq"
-	//config["archive"] = time.Now().Format("2006/01")
-	config["archive"] = "2012/11"
-	config["themes"] = "bootstrap"
-	config["keywords"] = "wendyeq, wendyeq.me, Go, golang, gae, google app engine, mongodb"
-	return config
+//var ctx map[string]interface{}
+func GetContext() map[string]interface{} {
+	ctx := make(map[string]interface{})
+	ctx["author"] = "wendyeq"
+	ctx["title"] = "Wendyeq"
+	ctx["archive"] = "2012/11"
+	ctx["themes"] = "bootstrap"
+	ctx["keywords"] = "wendyeq, wendyeq.me, Go, golang, gae, google app engine, mongodb"
+	return ctx
 }
 
 func GetRelease() (buf []byte, err error) {

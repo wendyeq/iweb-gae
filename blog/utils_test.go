@@ -24,19 +24,19 @@ func BenchmarkGenUUID(b *testing.B) {
 	}
 }
 
-func TestGetConfig(t *testing.T) {
-	m := GetConfig()
-	if len(m) <= 0 {
-		t.Fatalf("GetConfig err: %v", len(m))
+func TestGetContext(t *testing.T) {
+	ctx := GetContext()
+	if len(ctx) <= 0 {
+		t.Fatalf("GetContext err: %v", len(ctx))
 	}
-	if _, ok := m["author"]; !ok {
-		t.Fatal("GetConfig author is not exist!")
+	if _, ok := ctx["author"]; !ok {
+		t.Fatal("GetContext author is not exist!")
 	}
 }
 
-func BenchmarkGetConfig(b *testing.B) {
+func BenchmarkGetContext(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		GetConfig()
+		GetContext()
 	}
 }
 
