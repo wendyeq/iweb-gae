@@ -325,7 +325,7 @@ func AdminHandler(w http.ResponseWriter, r *http.Request) {
 	articles := make([]Article, (len(articleMetaDatas)))
 	for key, value := range articleMetaDatas {
 		articles[key].MetaData = value
-		articles[key].Text = template.HTML(blackfriday.MarkdownBasic([]byte(value.Content)))
+		articles[key].Text = template.HTML(blackfriday.MarkdownBasic([]byte(value.Summary)))
 	}
 	tags, err := GetAllTag(c)
 	if err != nil {
@@ -367,7 +367,7 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	articles := make([]Article, (len(articleMetaDatas)))
 	for key, value := range articleMetaDatas {
 		articles[key].MetaData = value
-		articles[key].Text = template.HTML(blackfriday.MarkdownBasic([]byte(value.Content)))
+		articles[key].Text = template.HTML(blackfriday.MarkdownBasic([]byte(value.Summary)))
 	}
 	tags, err := GetAllTag(c)
 	if err != nil {
@@ -404,7 +404,7 @@ func TagHandler(w http.ResponseWriter, r *http.Request) {
 	articles := make([]Article, (len(articleMetaDatas)))
 	for key, value := range articleMetaDatas {
 		articles[key].MetaData = value
-		articles[key].Text = template.HTML(blackfriday.MarkdownBasic([]byte(value.Content)))
+		articles[key].Text = template.HTML(blackfriday.MarkdownBasic([]byte(value.Summary)))
 	}
 	tags, err := GetAllTag(c)
 	if err != nil {
@@ -442,7 +442,7 @@ func ArchiveHandler(w http.ResponseWriter, r *http.Request) {
 	articles := make([]Article, (len(articleMetaDatas)))
 	for key, value := range articleMetaDatas {
 		articles[key].MetaData = value
-		articles[key].Text = template.HTML(blackfriday.MarkdownBasic([]byte(value.Content)))
+		articles[key].Text = template.HTML(blackfriday.MarkdownBasic([]byte(value.Summary)))
 	}
 	tags, err := GetAllTag(c)
 	if err != nil {
