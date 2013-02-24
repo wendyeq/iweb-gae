@@ -256,11 +256,10 @@ func ViewArticleHandler(w http.ResponseWriter, r *http.Request) {
 
 	data := make(map[string]interface{})
 	data["article"] = article
-	config := ctx.Args
 	endTime := time.Now()
-	config["costtime"] = endTime.Sub(beginTime)
-	config["title"] = articleMetaData.Title
-	data["config"] = config
+	ctx.Args["costtime"] = endTime.Sub(beginTime)
+	ctx.Args["title"] = articleMetaData.Title
+	data["args"] = ctx.Args
 	viewTPL.ExecuteTemplate(w, "main", data)
 
 }
