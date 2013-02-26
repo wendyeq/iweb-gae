@@ -3,10 +3,12 @@
 		{{$article := .article}}
 	    	{{$a := $article.MetaData}}
 	    <div class="container-fluid">
-	    	
-	    	<h1>{{$a.Title |html}}</h1>
+	    	<!-- Place this tag where you want the +1 button to render. -->
+	    	<h1>{{$a.Title |html}} <div class="g-plusone"></div></h1>
 
-	    	<div class="meta">{{$a.PostTime.Format "2006/01/02"}} 标签：
+	    	<div class="meta">
+	    		
+	    		{{$a.PostTime.Format "2006/01/02"}} 标签：
 	    		{{range $tag := $a.Tags}}
 	    		<a href="/blog/tag/{{$tag}}">{{$tag}}</a> 
 	    		{{end}}
