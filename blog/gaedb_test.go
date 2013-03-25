@@ -3,6 +3,7 @@ package blog
 
 import (
 	appenginetesting "github.com/tenntenn/gae-go-testing"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -72,4 +73,29 @@ func TestArticle(t *testing.T) {
 		t.Fatalf("Delete Article: %v", err)
 	}
 
+	//test GetAll
+	firstArticle = GetArticleForTest()
+	firstArticle.Title = "test1"
+	err = firstArticle.Save(ctx)
+	if err != nil {
+		t.Fatalf("Test GetAll1 Save Article: %v", err)
+	}
+
+	firstArticle = GetArticleForTest()
+	firstArticle.Title = "test2"
+	err = firstArticle.Save(ctx)
+	if err != nil {
+		t.Fatalf("Test GetAll2 Save Article: %v", err)
+	}
+
+	articles, err := firstArticle.GetAll(ctx)
+	if err != nil {
+		t.Fatalf("Test GetAll: %v", err)
+	}
+	for i, v := range articles {
+		str_i := strconv.Itoa(1 + i)
+		if v.Title != "test"+str_i {
+			t.Fatalf("Test GetAll fatal, title = %v, index = %v", v.Title, str_i)
+		}
+	}
 }

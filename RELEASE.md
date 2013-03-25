@@ -1,5 +1,10 @@
 ### Version 0.0.5 - February 24, 2013
 
+* 添加G+ 按钮
+
+
+### Version 0.0.5 - February 24, 2013
+
 * 重构Context
 * 添加分页功能
 * 实现列出所有Comment功能
