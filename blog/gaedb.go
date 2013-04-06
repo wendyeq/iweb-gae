@@ -164,11 +164,11 @@ func (this *ArticleMetaData) GetAllByTag(ctx Context, tag string) (articles []Ar
 	return articles, err
 }
 
-func (this *ArticleMetaData) GetAllByArchive(ctx Context, archive string) (articles []ArticleMetaData, err error) {
+func (this *ArticleMetaData) GetAllByArchive(ctx Context, year string, month string) (articles []ArticleMetaData, err error) {
 	c := ctx.GAEContext
 
-	year := archive[0:4]
-	month := archive[5:]
+	//year := archive[0:4]
+	//month := archive[5:]
 	fmt.Println("year=" + year)
 	fmt.Println("month=" + month)
 	if len(month) == 1 {

@@ -2,17 +2,15 @@
 package blog
 
 import (
-	"fmt"
-	//htmlTemplate "html/template"
 	"appengine"
 	"appengine/urlfetch"
+	"fmt"
 	"github.com/russross/blackfriday"
 	"html/template"
 	"io"
 	"net/http"
-	"strconv"
-	//"io/ioutil"
 	"regexp"
+	"strconv"
 	"strings"
 	textTemplate "text/template"
 	"time"
@@ -58,19 +56,10 @@ var (
 		"templates/"+themes+"/common/footer.html"))
 )
 
-//func serveError(w http.ResponseWriter, err error) {
-//w.WriteHeader(http.StatusInternalServerError)
-//w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-//io.WriteString(w, "Internal Server Error! "+err.Error())
-//c.Errorf("%v", err)
-//	editTPL.Execute(w, nil)
-//}
-
 func serveError(w http.ResponseWriter, err error) {
 	w.WriteHeader(http.StatusInternalServerError)
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	io.WriteString(w, "Internal Server Error "+err.Error())
-	//c.Errorf("%v", err)
 }
 
 func PreViewArticleHandler(w http.ResponseWriter, r *http.Request) {
@@ -95,7 +84,8 @@ func PreViewArticleHandler(w http.ResponseWriter, r *http.Request) {
 	//article.Flag, _ = strconv.ParseInt(r.FormValue("flag"), 10, 64)
 	articleMetaData.Count = 0
 
-	article := &Article{MetaData: *articleMetaData, Text: template.HTML([]byte(blackfriday.MarkdownBasic(articleMetaData.Content)))}
+	article := &Article{MetaData: *articleMetaData,
+		Text: template.HTML([]byte(blackfriday.MarkdownBasic(articleMetaData.Content)))}
 	data := make(map[string]interface{})
 	data["article"] = article
 
@@ -215,27 +205,28 @@ func ViewArticleHandler(w http.ResponseWriter, r *http.Request) {
 	ctx.GAEContext = appengine.NewContext(r)
 	beginTime := time.Now()
 	articleMetaData := &ArticleMetaData{}
-	url := r.URL.Path[len("/blog/"):]
+
 	id := r.FormValue("id")
 	if id != "" {
 		articleMetaData.Id = id
 
-	} else if dateTime.MatchString(url) {
-		year := url[0:4]
-		month := url[5:7]
-		day := url[8:10]
-		title := url[11:]
+	} else {
+		params := r.URL.Query()
+		year := params.Get(":year")
+		month := params.Get(":month")
+		day := params.Get(":day")
+		title := params.Get(":title")
 
-		postTime, _ := time.Parse("2006-01-02", year+"-"+month+"-"+day)
+		postTime, err := time.Parse("2006-01-02", year+"-"+month+"-"+day)
+		if err != nil {
+			serveError(w, err)
+			return
+		}
 		articleMetaData.PostTime = postTime
 		articleMetaData.UpdateTime = postTime.AddDate(0, 0, 1)
 		articleMetaData.Title = title
-		//articleMetaData := &ArticleMetaData{Title: title, PostTime: postTime, UpdateTime: updateTime}
-
-	} else {
-		http.NotFound(w, r)
-		return
 	}
+
 	err := articleMetaData.GetOne(ctx)
 	if err != nil {
 		http.NotFound(w, r)
@@ -248,8 +239,6 @@ func ViewArticleHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//article.Comments = 
-	//postTime.Format("2006/01")
 	article := &Article{MetaData: *articleMetaData,
 		Comments: comments,
 		Text:     template.HTML([]byte(blackfriday.MarkdownBasic(articleMetaData.Content)))}
@@ -489,7 +478,9 @@ func TagHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := GetContext()
 	ctx.GAEContext = appengine.NewContext(r)
 	beginTime := time.Now()
-	tag := r.URL.Path[len("/blog/tag/"):]
+	//tag := r.URL.Path[len("/blog/tag/"):]
+	params := r.URL.Query()
+	tag := params.Get(":tag")
 
 	if r.FormValue("size") != "" {
 		size, err := strconv.Atoi(r.FormValue("size"))
@@ -557,8 +548,10 @@ func ArchiveHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := GetContext()
 	ctx.GAEContext = appengine.NewContext(r)
 	beginTime := time.Now()
-	archive := r.URL.Path[len("/blog/archive/"):]
-
+	//archive := r.URL.Path[len("/blog/archive/"):]
+	params := r.URL.Query()
+	year := params.Get(":year")
+	month := params.Get(":month")
 	if r.FormValue("size") != "" {
 		size, err := strconv.Atoi(r.FormValue("size"))
 		if err != nil {
@@ -577,7 +570,7 @@ func ArchiveHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	articleMetaData := ArticleMetaData{}
-	articleMetaDatas, err := articleMetaData.GetAllByArchive(ctx, archive)
+	articleMetaDatas, err := articleMetaData.GetAllByArchive(ctx, year, month)
 	if err != nil {
 		http.NotFound(w, r)
 		return
@@ -610,7 +603,7 @@ func ArchiveHandler(w http.ResponseWriter, r *http.Request) {
 	ctx.Args["nextPageSize"] = nextPageSize
 
 	ctx.Args["url"] = r.URL.Path
-	ctx.Args["title"] = string("Archive " + archive + ", Article list")
+	ctx.Args["title"] = string("Archive " + year + "-" + month + ", Article list")
 	endTime := time.Now()
 	ctx.Args["costtime"] = endTime.Sub(beginTime)
 

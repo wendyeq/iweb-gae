@@ -1,7 +1,7 @@
-### Version 0.0.5 - February 24, 2013
+### Version 0.0.5 
 
 * 添加G+ 按钮
-
+* 添加第三方库[github.com/drone/routes](https://github.com/drone/routes)
 
 ### Version 0.0.5 - February 24, 2013
 

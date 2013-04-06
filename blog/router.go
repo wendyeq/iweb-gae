@@ -2,36 +2,37 @@
 package blog
 
 import (
+	"github.com/drone/routes"
 	"net/http"
 )
 
 func init() {
-	//http.HandleFunc("/static/", StaticHandler)
-	//http.HandleFunc("/ueditor/", StaticHandler)
 
-	http.HandleFunc("/release", ReleaseHandler)
-	//http.HandleFunc("/login", LoginHandler)
-	//http.HandleFunc("/logout", LogoutHandler)
+	mux := routes.New()
+	mux.Get("/blog/", ViewArticleHandler)
+	mux.Get("/blog/:year/:month/:day/:title", ViewArticleHandler)
+	mux.Get("/blog/tag/:tag", TagHandler)
+	mux.Get("/blog/archive/:year/:month", ArchiveHandler)
 
-	http.HandleFunc("/blog/", ViewArticleHandler)
-	http.HandleFunc("/blog/tag/", TagHandler)
-	http.HandleFunc("/blog/archive/", ArchiveHandler)
+	mux.Get("/blog/comment/post", SaveCommentHandler)
 
-	http.HandleFunc("/blog/comment/post", SaveCommentHandler)
+	mux.Get("/admin", AdminHandler)
+	mux.Get("/admin/article/post", SaveArticleHandler)
+	mux.Get("/admin/article/edit", EditArticleHandler)
+	mux.Get("/admin/article/update", UpdateArticleHandler)
+	mux.Get("/admin/article/delete", DeleteArticleHandler)
+	mux.Get("/admin/article/preview", PreViewArticleHandler)
+	mux.Get("/admin/comment/list", ListCommentHandler)
+	mux.Get("/admin/comment/delete", DeleteCommentHandler)
 
-	http.HandleFunc("/admin/", AdminHandler)
-	http.HandleFunc("/admin/article/post", SaveArticleHandler)
-	http.HandleFunc("/admin/article/edit", EditArticleHandler)
-	http.HandleFunc("/admin/article/update", UpdateArticleHandler)
-	http.HandleFunc("/admin/article/delete", DeleteArticleHandler)
-	http.HandleFunc("/admin/article/preview", PreViewArticleHandler)
+	mux.Get("/feed/atom", RssHandler)
+	mux.Get("/feed", RssHandler)
+	mux.Get("/rss.xml", RssHandler)
 
-	http.HandleFunc("/admin/comment/list", ListCommentHandler)
-	http.HandleFunc("/admin/comment/delete", DeleteCommentHandler)
-	http.HandleFunc("/feed", RssHandler)
-	http.HandleFunc("/feed/atom", RssHandler)
-	http.HandleFunc("/rss.xml", RssHandler)
-	http.HandleFunc("/sitemap", SitemapHandler)
-	http.HandleFunc("/sitemap.xml", SitemapHandler)
-	http.HandleFunc("/", IndexHandler)
+	mux.Get("/sitemap.xml", SitemapHandler)
+	mux.Get("/sitemap", SitemapHandler)
+	mux.Get("/release", ReleaseHandler)
+	mux.Get("/", IndexHandler)
+
+	http.Handle("/", mux)
 }
