@@ -2,7 +2,7 @@
 package blog
 
 import (
-	appenginetesting "github.com/tenntenn/gae-go-testing"
+	"github.com/wendyeq/appenginetesting"
 	"strconv"
 	"testing"
 	"time"

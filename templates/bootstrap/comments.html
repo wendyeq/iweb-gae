@@ -13,7 +13,12 @@
                 <div class="row-fluid">
                     <div class="span12">
                         <div class="hero">
-                            <h1><a href="#">{{$comment.Author}}</a>  <a class="btn btn-danger " href="/admin/comment/delete?id={{$comment.Id}}">Delete</a></h1>
+                            <h1><a href="#">{{$comment.Author}}</a> 
+                            <form method="delete" action="/admin/comment?id={{$comment.Id}}" name ="form1" >  
+                               <!-- <a class="btn btn-danger " href="/admin/comment?id={{$comment.Id}}">Delete</a> -->
+                                <button type="submit" class="btn btn-danger">Delete</button>
+                            </form>
+                            </h1>
                             <p>author: {{$comment.Author}}</p>
                             <p>email: {{$comment.Email}}</p>
                             <p>website: {{$comment.Website}}</p>

@@ -14,7 +14,8 @@ func init() {
 	mux.Get("/blog/tag/:tag", TagHandler)
 	mux.Get("/blog/archive/:year/:month", ArchiveHandler)
 
-	mux.Get("/blog/comment/post", SaveCommentHandler)
+	//mux.Get("/blog/comment/post", SaveCommentHandler)
+	mux.Post("/blog/comment", SaveCommentHandler)
 
 	mux.Get("/admin", AdminHandler)
 	mux.Get("/admin/article/post", SaveArticleHandler)
@@ -22,8 +23,9 @@ func init() {
 	mux.Get("/admin/article/update", UpdateArticleHandler)
 	mux.Get("/admin/article/delete", DeleteArticleHandler)
 	mux.Get("/admin/article/preview", PreViewArticleHandler)
-	mux.Get("/admin/comment/list", ListCommentHandler)
-	mux.Get("/admin/comment/delete", DeleteCommentHandler)
+	mux.Get("/admin/comment", ListCommentHandler)
+	mux.Del("/admin/comment", DeleteCommentHandler)
+	//mux.Get("/admin/comment/delete", DeleteCommentHandler)
 
 	mux.Get("/feed/atom", RssHandler)
 	mux.Get("/feed", RssHandler)
