@@ -56,6 +56,10 @@ var (
 		"templates/"+themes+"/common/footer.html"))
 )
 
+func server404(w http.ResponseWriter, err error) {
+
+}
+
 func serveError(w http.ResponseWriter, err error) {
 	w.WriteHeader(http.StatusInternalServerError)
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -205,13 +209,14 @@ func ViewArticleHandler(w http.ResponseWriter, r *http.Request) {
 	ctx.GAEContext = appengine.NewContext(r)
 	beginTime := time.Now()
 	articleMetaData := &ArticleMetaData{}
-
-	id := r.FormValue("id")
+	params := r.URL.Query()
+	//id := r.FormValue("id")
+	id := params.Get(":id")
 	if id != "" {
 		articleMetaData.Id = id
 
 	} else {
-		params := r.URL.Query()
+
 		year := params.Get(":year")
 		month := params.Get(":month")
 		day := params.Get(":day")

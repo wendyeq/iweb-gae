@@ -9,7 +9,7 @@ import (
 func init() {
 
 	mux := routes.New()
-	mux.Get("/blog/", ViewArticleHandler)
+	mux.Get("/blog/:id", ViewArticleHandler)
 	mux.Get("/blog/:year/:month/:day/:title", ViewArticleHandler)
 	mux.Get("/blog/tag/:tag", TagHandler)
 	mux.Get("/blog/archive/:year/:month", ArchiveHandler)
