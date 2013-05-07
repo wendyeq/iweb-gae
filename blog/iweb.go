@@ -9,7 +9,7 @@ import (
 	"html/template"
 	"io"
 	"net/http"
-	"regexp"
+	//"regexp"
 	"strconv"
 	"strings"
 	textTemplate "text/template"
@@ -202,26 +202,30 @@ func DeleteArticleHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-var dateTime = regexp.MustCompile("^[0-9]{4}/[0-9]{2}/[0-9]{2}/+")
-
 func ViewArticleHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := GetContext()
 	ctx.GAEContext = appengine.NewContext(r)
 	beginTime := time.Now()
 	articleMetaData := &ArticleMetaData{}
 	params := r.URL.Query()
-	//id := r.FormValue("id")
 	id := params.Get(":id")
 	if id != "" {
 		articleMetaData.Id = id
-
 	} else {
-
 		year := params.Get(":year")
 		month := params.Get(":month")
 		day := params.Get(":day")
 		title := params.Get(":title")
-
+		//month only in 1~12
+		if m, err := strconv.Atoi(month); err != nil || m > 12 || m < 1 {
+			http.NotFound(w, r)
+			return
+		}
+		//day only in 1~31
+		if d, err := strconv.Atoi(month); err != nil || d > 31 || d < 1 {
+			http.NotFound(w, r)
+			return
+		}
 		postTime, err := time.Parse("2006-01-02", year+"-"+month+"-"+day)
 		if err != nil {
 			serveError(w, err)
