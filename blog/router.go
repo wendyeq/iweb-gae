@@ -10,6 +10,7 @@ func init() {
 
 	mux := routes.New()
 	mux.Get("/blog/:id", ViewArticleHandler)
+
 	// url like /blog/2013/05/08/golang
 	mux.Get("/blog/:year([0-9]{4})/:month([0-9]{2})/:day([0-9]{2})/:title", ViewArticleHandler)
 	mux.Get("/blog/tag/:tag", TagHandler)

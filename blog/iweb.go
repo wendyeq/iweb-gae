@@ -202,6 +202,7 @@ func DeleteArticleHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+//
 func ViewArticleHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := GetContext()
 	ctx.GAEContext = appengine.NewContext(r)
