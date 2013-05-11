@@ -202,7 +202,9 @@ func DeleteArticleHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-//
+// view article by id or by date and title
+// url like /blog/6f1135c940fc5e928084e38d62065f50
+// or url like /blog/2013/05/08/golang
 func ViewArticleHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := GetContext()
 	ctx.GAEContext = appengine.NewContext(r)
@@ -236,12 +238,13 @@ func ViewArticleHandler(w http.ResponseWriter, r *http.Request) {
 		articleMetaData.UpdateTime = postTime.AddDate(0, 0, 1)
 		articleMetaData.Title = title
 	}
-
+	// get article
 	err := articleMetaData.GetOne(ctx)
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
+	// get comments
 	comment := &Comment{ArticleId: articleMetaData.Id}
 	comments, err := comment.GetAll(ctx)
 	if err != nil {
@@ -251,7 +254,8 @@ func ViewArticleHandler(w http.ResponseWriter, r *http.Request) {
 
 	article := &Article{MetaData: *articleMetaData,
 		Comments: comments,
-		Text:     template.HTML([]byte(blackfriday.MarkdownBasic(articleMetaData.Content)))}
+		Text: template.HTML([]byte(blackfriday.
+			MarkdownBasic(articleMetaData.Content)))}
 
 	data := make(map[string]interface{})
 	data["article"] = article
@@ -272,7 +276,7 @@ func SaveCommentHandler(w http.ResponseWriter, r *http.Request) {
 	comment.Author = r.FormValue("name")
 	comment.Email = r.FormValue("email")
 	comment.Website = r.FormValue("website")
-	comment.Flag = 2
+	comment.Flag = 2 //public
 	comment.Content = r.FormValue("content")
 	now := time.Now()
 	comment.PostTime = now
@@ -419,11 +423,11 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	ctx.GAEContext = appengine.NewContext(r)
 
 	beginTime := time.Now()
-
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
 		return
 	}
+
 	if r.FormValue("size") != "" {
 		size, err := strconv.Atoi(r.FormValue("size"))
 		if err != nil {
@@ -443,7 +447,6 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 
 	articleMetaData := &ArticleMetaData{}
 	articleMetaDatas, err := articleMetaData.GetAll(ctx)
-	//err = fmt.Errorf("format %v ", "get all err")
 	if err != nil {
 		serveError(w, err)
 		return
@@ -483,15 +486,13 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	indexTPL.ExecuteTemplate(w, "main", data)
 }
 
-//show tag
+//list article by tag
 func TagHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := GetContext()
 	ctx.GAEContext = appengine.NewContext(r)
 	beginTime := time.Now()
-	//tag := r.URL.Path[len("/blog/tag/"):]
 	params := r.URL.Query()
 	tag := params.Get(":tag")
-
 	if r.FormValue("size") != "" {
 		size, err := strconv.Atoi(r.FormValue("size"))
 		if err != nil {
@@ -545,7 +546,7 @@ func TagHandler(w http.ResponseWriter, r *http.Request) {
 
 	ctx.Args["url"] = r.URL.Path
 
-	ctx.Args["title"] = string("Tags " + tag + ", Article list")
+	ctx.Args["title"] = string("Tags " + tag + " - Wendyeq blog")
 	endTime := time.Now()
 	ctx.Args["costtime"] = endTime.Sub(beginTime)
 
@@ -601,9 +602,9 @@ func ArchiveHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	indexData := &IndexData{Articles: articles, Tags: tags, Archives: archives}
-
 	data := make(map[string]interface{})
 	data["data"] = indexData
+
 	prePageSize := ctx.Args["pageSize"].(int) - 1
 	ctx.Args["prePageSize"] = prePageSize
 	if prePageSize > 0 {
@@ -613,7 +614,7 @@ func ArchiveHandler(w http.ResponseWriter, r *http.Request) {
 	ctx.Args["nextPageSize"] = nextPageSize
 
 	ctx.Args["url"] = r.URL.Path
-	ctx.Args["title"] = string("Archive " + year + "-" + month + ", Article list")
+	ctx.Args["title"] = string("Archive " + year + "-" + month + " - Wendyeq home")
 	endTime := time.Now()
 	ctx.Args["costtime"] = endTime.Sub(beginTime)
 

@@ -9,6 +9,9 @@ import (
 	"time"
 )
 
+// page show article size
+var size int = 2
+
 //save article and save tags transaction
 func (this *ArticleMetaData) Save(ctx Context) (err error) {
 	c := ctx.GAEContext
@@ -168,8 +171,10 @@ func (this *ArticleMetaData) GetOne(ctx Context) (err error) {
 	return err
 }
 
+// get all aticles order by postTime desc
 func (this *ArticleMetaData) GetAll(ctx Context) (articles []ArticleMetaData, err error) {
 	c := ctx.GAEContext
+
 	size, ok := ctx.Args["size"].(int)
 	if !ok || size <= 0 {
 		size = 5
@@ -187,22 +192,20 @@ func (this *ArticleMetaData) GetAll(ctx Context) (articles []ArticleMetaData, er
 	return articles, err
 }
 
+// get articles by tag
 func (this *ArticleMetaData) GetAllByTag(ctx Context, tag string) (articles []ArticleMetaData, err error) {
 	c := ctx.GAEContext
-
 	size, ok := ctx.Args["size"].(int)
 	if !ok || size <= 0 {
 		size = 5
 		ctx.Args["size"] = size
 	}
-	fmt.Println("size tag : ", size)
 	pageSize, ok := ctx.Args["pageSize"].(int)
 	if !ok || pageSize <= 0 {
 		pageSize = 1
 		ctx.Args["pageSize"] = pageSize
 	}
 	offset := size * (pageSize - 1)
-
 	q := datastore.NewQuery("Article").Filter("Tags = ", tag).Offset(offset).Limit(size)
 	_, err = q.GetAll(c, &articles)
 	return articles, err

@@ -14,7 +14,7 @@ func init() {
 	// url like /blog/2013/05/08/golang
 	mux.Get("/blog/:year([0-9]{4})/:month([0-9]{2})/:day([0-9]{2})/:title", ViewArticleHandler)
 	mux.Get("/blog/tag/:tag", TagHandler)
-	mux.Get("/blog/archive/:year/:month", ArchiveHandler)
+	mux.Get("/blog/archive/:year([0-9]{4})/:month([0-9]{2})", ArchiveHandler)
 
 	//mux.Get("/blog/comment/post", SaveCommentHandler)
 	mux.Post("/blog/comment", SaveCommentHandler)
