@@ -304,7 +304,7 @@ func DeleteCommentHandler(w http.ResponseWriter, r *http.Request) {
 		serveError(w, err)
 		return
 	}
-	http.Redirect(w, r, "/admin/comment/list", http.StatusFound)
+	http.Redirect(w, r, "/admin/comment", http.StatusFound)
 }
 
 func ListCommentHandler(w http.ResponseWriter, r *http.Request) {
@@ -380,6 +380,10 @@ func AdminHandler(w http.ResponseWriter, r *http.Request) {
 		serveError(w, err)
 		return
 	}
+	if len(articleMetaDatas) == 0 {
+		http.NotFound(w, r)
+		return
+	}
 	articles := make([]Article, (len(articleMetaDatas)))
 	for key, value := range articleMetaDatas {
 		articles[key].MetaData = value
@@ -451,6 +455,10 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 		serveError(w, err)
 		return
 	}
+	if len(articleMetaDatas) == 0 {
+		http.NotFound(w, r)
+		return
+	}
 	articles := make([]Article, (len(articleMetaDatas)))
 	for key, value := range articleMetaDatas {
 		articles[key].MetaData = value
@@ -513,10 +521,13 @@ func TagHandler(w http.ResponseWriter, r *http.Request) {
 	articleMetaData := &ArticleMetaData{}
 	articleMetaDatas, err := articleMetaData.GetAllByTag(ctx, tag)
 	if err != nil {
+		serveError(w, err)
+		return
+	}
+	if len(articleMetaDatas) == 0 {
 		http.NotFound(w, r)
 		return
 	}
-
 	articles := make([]Article, (len(articleMetaDatas)))
 	for key, value := range articleMetaDatas {
 		articles[key].MetaData = value
@@ -583,6 +594,10 @@ func ArchiveHandler(w http.ResponseWriter, r *http.Request) {
 	articleMetaData := ArticleMetaData{}
 	articleMetaDatas, err := articleMetaData.GetAllByArchive(ctx, year, month)
 	if err != nil {
+		serveError(w, err)
+		return
+	}
+	if len(articleMetaDatas) == 0 {
 		http.NotFound(w, r)
 		return
 	}
@@ -629,6 +644,10 @@ func RssHandler(w http.ResponseWriter, r *http.Request) {
 	articleMetaData := ArticleMetaData{}
 	articleMetaDatas, err := articleMetaData.GetAll(ctx)
 	if err != nil {
+		serveError(w, err)
+		return
+	}
+	if len(articleMetaDatas) == 0 {
 		http.NotFound(w, r)
 		return
 	}
@@ -647,6 +666,10 @@ func SitemapHandler(w http.ResponseWriter, r *http.Request) {
 	articleMetaData := ArticleMetaData{}
 	articleMetaDatas, err := articleMetaData.GetAll(ctx)
 	if err != nil {
+		serveError(w, err)
+		return
+	}
+	if len(articleMetaDatas) == 0 {
 		http.NotFound(w, r)
 		return
 	}
