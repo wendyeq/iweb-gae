@@ -326,6 +326,10 @@ func ListCommentHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		ctx.Args["pageSize"] = pageSize
+		if pageSize > 100 {
+			http.NotFound(w, r)
+			return
+		}
 	}
 
 	comments, err := GetAllComments(ctx)
@@ -447,6 +451,10 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		ctx.Args["pageSize"] = pageSize
+		if pageSize > 100 {
+			http.NotFound(w, r)
+			return
+		}
 	}
 
 	articleMetaData := &ArticleMetaData{}
@@ -516,6 +524,10 @@ func TagHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		ctx.Args["pageSize"] = pageSize
+		if pageSize > 100 {
+			http.NotFound(w, r)
+			return
+		}
 	}
 
 	articleMetaData := &ArticleMetaData{}
@@ -589,6 +601,10 @@ func ArchiveHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		ctx.Args["pageSize"] = pageSize
+		if pageSize > 100 {
+			http.NotFound(w, r)
+			return
+		}
 	}
 
 	articleMetaData := ArticleMetaData{}
