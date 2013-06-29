@@ -9,23 +9,24 @@ import (
 func init() {
 
 	mux := routes.New()
-	mux.Get("/blog/", ViewArticleHandler)
-	mux.Get("/blog/:year/:month/:day/:title", ViewArticleHandler)
-	mux.Get("/blog/tag/:tag", TagHandler)
-	mux.Get("/blog/archive/:year/:month", ArchiveHandler)
+	mux.Get("/blog/:id", ViewArticleHandler)
 
-	//mux.Get("/blog/comment/post", SaveCommentHandler)
+	// url like /blog/2013/05/08/golang
+	mux.Get("/blog/:year([0-9]{4})/:month([0-9]{2})/:day([0-9]{2})/:title", ViewArticleHandler)
+	mux.Get("/blog/tag/:tag", TagHandler)
+	mux.Get("/blog/archive/:year([0-9]{4})/:month([0-9]{2})", ArchiveHandler)
+
 	mux.Post("/blog/comment", SaveCommentHandler)
 
 	mux.Get("/admin", AdminHandler)
-	mux.Get("/admin/article/post", SaveArticleHandler)
+	mux.Post("/admin/article/post", SaveArticleHandler)
 	mux.Get("/admin/article/edit", EditArticleHandler)
-	mux.Get("/admin/article/update", UpdateArticleHandler)
-	mux.Get("/admin/article/delete", DeleteArticleHandler)
-	mux.Get("/admin/article/preview", PreViewArticleHandler)
+	mux.Post("/admin/article/update", UpdateArticleHandler)
+	mux.Post("/admin/article/delete", DeleteArticleHandler)
+	mux.Post("/admin/article/preview", PreViewArticleHandler)
+
 	mux.Get("/admin/comment", ListCommentHandler)
-	mux.Del("/admin/comment", DeleteCommentHandler)
-	//mux.Get("/admin/comment/delete", DeleteCommentHandler)
+	mux.Post("/admin/comment/delete", DeleteCommentHandler)
 
 	mux.Get("/feed/atom", RssHandler)
 	mux.Get("/feed", RssHandler)

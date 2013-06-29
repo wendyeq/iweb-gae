@@ -4,9 +4,13 @@ package blog
 import (
 	"appengine"
 	"appengine/datastore"
+	"appengine/memcache"
 	"fmt"
 	"time"
 )
+
+// page show article size
+var size int = 2
 
 //save article and save tags transaction
 func (this *ArticleMetaData) Save(ctx Context) (err error) {
@@ -88,7 +92,27 @@ func (this *ArticleMetaData) Delete(ctx Context) (err error) {
 
 func (this *ArticleMetaData) GetOne(ctx Context) (err error) {
 	c := ctx.GAEContext
+
 	if len(this.Id) > 0 {
+		//check article in memcache
+		articleItem, err := memcache.JSON.Get(c, this.Id, this)
+
+		if err == nil {
+			c.Infof("article memcache hit: Key=%q . ", articleItem.Key)
+			//update visitor count
+			this.Count++
+			k := datastore.NewKey(c, "Article", this.Id, 0, nil)
+			_, err = datastore.Put(c, k, this)
+			fmt.Println(this.Count)
+			return err
+		} else if err != nil && err != memcache.ErrCacheMiss {
+			c.Errorf("article memcache hit error: %q", err)
+			return err
+		} else {
+			c.Infof("article memcache miss.")
+		}
+
+		// query by id use datstore
 		err = datastore.RunInTransaction(c, func(c appengine.Context) error {
 			k := datastore.NewKey(c, "Article", this.Id, 0, nil)
 			err = datastore.Get(c, k, this)
@@ -99,7 +123,25 @@ func (this *ArticleMetaData) GetOne(ctx Context) (err error) {
 			_, err = datastore.Put(c, k, this)
 			return err
 		}, nil)
+		//add article in memcache
+		err = memcache.JSON.Add(c, &memcache.Item{Key: this.Id, Object: this})
+		return err
 	} else {
+		//check article in memcache
+		strTime := this.PostTime.Format("2006-01-02")
+		articleItem, err := memcache.JSON.Get(c, strTime+this.Title, this)
+		if err == nil {
+			this.Count++
+			c.Infof("article memcache hit by query: Key=%q . ", articleItem.Key)
+			fmt.Println(this.Count)
+			return err
+		} else if err != nil && err != memcache.ErrCacheMiss {
+			c.Errorf("article memcache hit error: %q", err)
+			return err
+		} else {
+			c.Infof("article memcache miss.")
+		}
+		fmt.Println(this.Title)
 		var articles []ArticleMetaData
 		q := datastore.NewQuery("Article").
 			Filter("PostTime >=", this.PostTime).
@@ -116,16 +158,23 @@ func (this *ArticleMetaData) GetOne(ctx Context) (err error) {
 			return fmt.Errorf("Fail to find article title=%v: %v", this.Title, err)
 		}
 		*this = articles[0]
+		//update visitor count
 		this.Count++
 		k := datastore.NewKey(c, "Article", this.Id, 0, nil)
 		_, err = datastore.Put(c, k, this)
+
+		//add article in memcache
+		strTime = this.PostTime.Format("2006-01-02")
+		err = memcache.JSON.Add(c, &memcache.Item{Key: strTime + this.Title, Object: this})
 		return err
 	}
 	return err
 }
 
+// get all aticles order by postTime desc
 func (this *ArticleMetaData) GetAll(ctx Context) (articles []ArticleMetaData, err error) {
 	c := ctx.GAEContext
+
 	size, ok := ctx.Args["size"].(int)
 	if !ok || size <= 0 {
 		size = 5
@@ -143,22 +192,20 @@ func (this *ArticleMetaData) GetAll(ctx Context) (articles []ArticleMetaData, er
 	return articles, err
 }
 
+// get articles by tag
 func (this *ArticleMetaData) GetAllByTag(ctx Context, tag string) (articles []ArticleMetaData, err error) {
 	c := ctx.GAEContext
-
 	size, ok := ctx.Args["size"].(int)
 	if !ok || size <= 0 {
 		size = 5
 		ctx.Args["size"] = size
 	}
-	fmt.Println("size tag : ", size)
 	pageSize, ok := ctx.Args["pageSize"].(int)
 	if !ok || pageSize <= 0 {
 		pageSize = 1
 		ctx.Args["pageSize"] = pageSize
 	}
 	offset := size * (pageSize - 1)
-
 	q := datastore.NewQuery("Article").Filter("Tags = ", tag).Offset(offset).Limit(size)
 	_, err = q.GetAll(c, &articles)
 	return articles, err

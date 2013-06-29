@@ -9,7 +9,8 @@ import (
 
 type Context struct {
 	GAEContext appengine.Context
-	Args       map[string]interface{}
+	// set pageSize size.
+	Args map[string]interface{}
 }
 
 type ArticleMetaData struct {

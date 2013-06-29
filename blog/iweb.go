@@ -9,7 +9,7 @@ import (
 	"html/template"
 	"io"
 	"net/http"
-	"regexp"
+	//"regexp"
 	"strconv"
 	"strings"
 	textTemplate "text/template"
@@ -55,6 +55,10 @@ var (
 		"templates/"+themes+"/common/header.html",
 		"templates/"+themes+"/common/footer.html"))
 )
+
+func server404(w http.ResponseWriter, err error) {
+
+}
 
 func serveError(w http.ResponseWriter, err error) {
 	w.WriteHeader(http.StatusInternalServerError)
@@ -198,25 +202,33 @@ func DeleteArticleHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-var dateTime = regexp.MustCompile("^[0-9]{4}/[0-9]{2}/[0-9]{2}/+")
-
+// view article by id or by date and title
+// url like /blog/6f1135c940fc5e928084e38d62065f50
+// or url like /blog/2013/05/08/golang
 func ViewArticleHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := GetContext()
 	ctx.GAEContext = appengine.NewContext(r)
 	beginTime := time.Now()
 	articleMetaData := &ArticleMetaData{}
-
-	id := r.FormValue("id")
+	params := r.URL.Query()
+	id := params.Get(":id")
 	if id != "" {
 		articleMetaData.Id = id
-
 	} else {
-		params := r.URL.Query()
 		year := params.Get(":year")
 		month := params.Get(":month")
 		day := params.Get(":day")
 		title := params.Get(":title")
-
+		//month only in 1~12
+		if m, err := strconv.Atoi(month); err != nil || m > 12 || m < 1 {
+			http.NotFound(w, r)
+			return
+		}
+		//day only in 1~31
+		if d, err := strconv.Atoi(month); err != nil || d > 31 || d < 1 {
+			http.NotFound(w, r)
+			return
+		}
 		postTime, err := time.Parse("2006-01-02", year+"-"+month+"-"+day)
 		if err != nil {
 			serveError(w, err)
@@ -226,12 +238,13 @@ func ViewArticleHandler(w http.ResponseWriter, r *http.Request) {
 		articleMetaData.UpdateTime = postTime.AddDate(0, 0, 1)
 		articleMetaData.Title = title
 	}
-
+	// get article
 	err := articleMetaData.GetOne(ctx)
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
+	// get comments
 	comment := &Comment{ArticleId: articleMetaData.Id}
 	comments, err := comment.GetAll(ctx)
 	if err != nil {
@@ -241,7 +254,8 @@ func ViewArticleHandler(w http.ResponseWriter, r *http.Request) {
 
 	article := &Article{MetaData: *articleMetaData,
 		Comments: comments,
-		Text:     template.HTML([]byte(blackfriday.MarkdownBasic(articleMetaData.Content)))}
+		Text: template.HTML([]byte(blackfriday.
+			MarkdownBasic(articleMetaData.Content)))}
 
 	data := make(map[string]interface{})
 	data["article"] = article
@@ -262,7 +276,7 @@ func SaveCommentHandler(w http.ResponseWriter, r *http.Request) {
 	comment.Author = r.FormValue("name")
 	comment.Email = r.FormValue("email")
 	comment.Website = r.FormValue("website")
-	comment.Flag = 2
+	comment.Flag = 2 //public
 	comment.Content = r.FormValue("content")
 	now := time.Now()
 	comment.PostTime = now
@@ -290,7 +304,7 @@ func DeleteCommentHandler(w http.ResponseWriter, r *http.Request) {
 		serveError(w, err)
 		return
 	}
-	http.Redirect(w, r, "/admin/comment/list", http.StatusFound)
+	http.Redirect(w, r, "/admin/comment", http.StatusFound)
 }
 
 func ListCommentHandler(w http.ResponseWriter, r *http.Request) {
@@ -312,6 +326,10 @@ func ListCommentHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		ctx.Args["pageSize"] = pageSize
+		if pageSize > 100 {
+			http.NotFound(w, r)
+			return
+		}
 	}
 
 	comments, err := GetAllComments(ctx)
@@ -366,6 +384,10 @@ func AdminHandler(w http.ResponseWriter, r *http.Request) {
 		serveError(w, err)
 		return
 	}
+	if len(articleMetaDatas) == 0 {
+		http.NotFound(w, r)
+		return
+	}
 	articles := make([]Article, (len(articleMetaDatas)))
 	for key, value := range articleMetaDatas {
 		articles[key].MetaData = value
@@ -409,11 +431,11 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	ctx.GAEContext = appengine.NewContext(r)
 
 	beginTime := time.Now()
-
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
 		return
 	}
+
 	if r.FormValue("size") != "" {
 		size, err := strconv.Atoi(r.FormValue("size"))
 		if err != nil {
@@ -429,13 +451,20 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		ctx.Args["pageSize"] = pageSize
+		if pageSize > 100 {
+			http.NotFound(w, r)
+			return
+		}
 	}
 
 	articleMetaData := &ArticleMetaData{}
 	articleMetaDatas, err := articleMetaData.GetAll(ctx)
-	//err = fmt.Errorf("format %v ", "get all err")
 	if err != nil {
 		serveError(w, err)
+		return
+	}
+	if len(articleMetaDatas) == 0 {
+		http.NotFound(w, r)
 		return
 	}
 	articles := make([]Article, (len(articleMetaDatas)))
@@ -473,15 +502,13 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	indexTPL.ExecuteTemplate(w, "main", data)
 }
 
-//show tag
+//list article by tag
 func TagHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := GetContext()
 	ctx.GAEContext = appengine.NewContext(r)
 	beginTime := time.Now()
-	//tag := r.URL.Path[len("/blog/tag/"):]
 	params := r.URL.Query()
 	tag := params.Get(":tag")
-
 	if r.FormValue("size") != "" {
 		size, err := strconv.Atoi(r.FormValue("size"))
 		if err != nil {
@@ -497,15 +524,22 @@ func TagHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		ctx.Args["pageSize"] = pageSize
+		if pageSize > 100 {
+			http.NotFound(w, r)
+			return
+		}
 	}
 
 	articleMetaData := &ArticleMetaData{}
 	articleMetaDatas, err := articleMetaData.GetAllByTag(ctx, tag)
 	if err != nil {
+		serveError(w, err)
+		return
+	}
+	if len(articleMetaDatas) == 0 {
 		http.NotFound(w, r)
 		return
 	}
-
 	articles := make([]Article, (len(articleMetaDatas)))
 	for key, value := range articleMetaDatas {
 		articles[key].MetaData = value
@@ -535,7 +569,7 @@ func TagHandler(w http.ResponseWriter, r *http.Request) {
 
 	ctx.Args["url"] = r.URL.Path
 
-	ctx.Args["title"] = string("Tags " + tag + ", Article list")
+	ctx.Args["title"] = string("Tags " + tag + " - Wendyeq blog")
 	endTime := time.Now()
 	ctx.Args["costtime"] = endTime.Sub(beginTime)
 
@@ -567,11 +601,19 @@ func ArchiveHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		ctx.Args["pageSize"] = pageSize
+		if pageSize > 100 {
+			http.NotFound(w, r)
+			return
+		}
 	}
 
 	articleMetaData := ArticleMetaData{}
 	articleMetaDatas, err := articleMetaData.GetAllByArchive(ctx, year, month)
 	if err != nil {
+		serveError(w, err)
+		return
+	}
+	if len(articleMetaDatas) == 0 {
 		http.NotFound(w, r)
 		return
 	}
@@ -591,9 +633,9 @@ func ArchiveHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	indexData := &IndexData{Articles: articles, Tags: tags, Archives: archives}
-
 	data := make(map[string]interface{})
 	data["data"] = indexData
+
 	prePageSize := ctx.Args["pageSize"].(int) - 1
 	ctx.Args["prePageSize"] = prePageSize
 	if prePageSize > 0 {
@@ -603,7 +645,7 @@ func ArchiveHandler(w http.ResponseWriter, r *http.Request) {
 	ctx.Args["nextPageSize"] = nextPageSize
 
 	ctx.Args["url"] = r.URL.Path
-	ctx.Args["title"] = string("Archive " + year + "-" + month + ", Article list")
+	ctx.Args["title"] = string("Archive " + year + "-" + month + " - Wendyeq home")
 	endTime := time.Now()
 	ctx.Args["costtime"] = endTime.Sub(beginTime)
 
@@ -618,6 +660,10 @@ func RssHandler(w http.ResponseWriter, r *http.Request) {
 	articleMetaData := ArticleMetaData{}
 	articleMetaDatas, err := articleMetaData.GetAll(ctx)
 	if err != nil {
+		serveError(w, err)
+		return
+	}
+	if len(articleMetaDatas) == 0 {
 		http.NotFound(w, r)
 		return
 	}
@@ -636,6 +682,10 @@ func SitemapHandler(w http.ResponseWriter, r *http.Request) {
 	articleMetaData := ArticleMetaData{}
 	articleMetaDatas, err := articleMetaData.GetAll(ctx)
 	if err != nil {
+		serveError(w, err)
+		return
+	}
+	if len(articleMetaDatas) == 0 {
 		http.NotFound(w, r)
 		return
 	}

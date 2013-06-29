@@ -16,7 +16,7 @@ func GetArticleForTest() (a *ArticleMetaData) {
 	}
 }
 
-// Save, Update, GetOne, Delete 
+// Save, Update, GetOne, Delete
 func TestArticle(t *testing.T) {
 	ctx := GetContext()
 	c, err := appenginetesting.NewContext(nil)
@@ -39,8 +39,8 @@ func TestArticle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetOne Article Using Id : %v", err)
 	}
-	if secondArticle.PostTime != firstArticle.PostTime {
-		t.Fatal("GetOne Article Using Id Error! PostTime isn't equals.")
+	if secondArticle.Title != firstArticle.Title {
+		t.Fatal("GetOne Article Using Id Error! Title isn't equals.")
 	}
 
 	//test GetOne using time and title
@@ -93,7 +93,7 @@ func TestArticle(t *testing.T) {
 		t.Fatalf("Test GetAll: %v", err)
 	}
 	for i, v := range articles {
-		str_i := strconv.Itoa(1 + i)
+		str_i := strconv.Itoa(len(articles) - i)
 		if v.Title != "test"+str_i {
 			t.Fatalf("Test GetAll fatal, title = %v, index = %v", v.Title, str_i)
 		}
