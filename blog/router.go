@@ -36,5 +36,8 @@ func init() {
 	mux.Get("/release", ReleaseHandler)
 	mux.Get("/", IndexHandler)
 
+	mux.Get("/api/blog", ApiIndexHandler)
+	mux.Get("/api/blog/article", ApiArticleHandler)
+
 	http.Handle("/", mux)
 }
